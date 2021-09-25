@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: opencv:opencv:4.5.3">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/opencv/opencv/4.5.3/opencv-4.5.3.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

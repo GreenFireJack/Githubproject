@@ -1,0 +1,5 @@
+Manifest-Version: 1.0-SNAPSHOT
+Built-By: gradle 3.3
+Built-date: 2021-09-22 15:47:23
+packageName: ndsServiceApi
+

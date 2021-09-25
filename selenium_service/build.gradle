@@ -1,0 +1,134 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+
+[compileJava, javadoc, compileTestJava]*.options*.encoding = 'UTF-8'
+
+ext {
+    springVersion = "4.3.8.RELEASE"
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()//JCenter中央仓库，实际也是是用的maven搭建的，但相比Maven仓库更友好，通过CDN分发，并且支持https访问。
+    maven{ url "http://maven.aliyun.com/nexus/content/groups/public"}
+//    flatDir{dirs 'lib'}
+}
+
+eclipse {
+    classpath { downloadSources=false }
+}
+
+sourceCompatibility=1.8
+targetCompatibility=1.8
+
+dependencies {
+
+
+    // 三方库：
+    compile ("org.springframework:spring-core:${springVersion}")
+    compile ("org.springframework:spring-context:${springVersion}")
+    compile 'cglib:cglib:3.1'
+
+
+    compile "org.springframework:spring-webmvc:${springVersion}"
+    compile 'javax.servlet:javax.servlet-api:3.0.1'
+
+//    compile 'org.seleniumhq.selenium:selenium-server:3.0.0-beta4'
+    compile 'org.seleniumhq.selenium:selenium-java:4.0.0-beta-2'
+    compile 'cn.hutool:hutool-all:5.7.13'
+    compile 'opencv:opencv:4.5.3'
+//    compile file('lib/opencv-453.jar')
+//    compile fileTree(dir:'lib',include:['*.jar'])
+
+
+    compile "junit:junit:4.12"
+}
+
+group = 'com.sunriseframework.nds'
+
+ext {
+    ndsServiceApiAppName= 'ndsServiceApi'
+    ndsServiceAppName= 'ndsService'
+    appVersion= '1.0-SNAPSHOT'
+    builtBy="gradle 3.3"
+}
+
+task ndsServiceApiJar(type:Jar){
+    version "${appVersion}"
+    from sourceSets.main.output
+    include 'com/sunriseframework/nds/business/pub/interfaces/**'
+    manifest {
+        attributes 'packageName': "${ndsServiceApiAppName}", 'Built-By': builtBy,'Built-date': new Date().format('yyyy-MM-dd HH:mm:ss'),'Manifest-Version':version
+    }
+}
+
+task copyJars(type: Copy) {
+
+    from configurations.runtime
+    into 'lib' // 目标位置
+
+}
+
+task ndsServiceJar(type:Jar){
+    version "${appVersion}"
+    from sourceSets.main.output
+    include '**'
+    exclude 'applicationContext.xml'
+
+    manifest {
+        attributes 'packageName': "${ndsServiceAppName}", 'Built-By': builtBy,'Built-date': new Date().format('yyyy-MM-dd HH:mm:ss'),'Manifest-Version':version
+    }
+//    manifest {
+//        attributes  'Main-Clas': 'com.sunriseframework.nds.NdsStart.Class'
+//        attributes  'Class-Path': new File(libPath).list().findAll {
+//            it.endsWith('.jar') }.collect { "$libPath/$it" }.join(' ')
+//    }
+}
+
+//打可执行jar包
+task runnbaleJar(type: Jar) {
+    from fileTree(dir: 'lib', include: '**' )
+    from sourceSets.main.output
+    include '**'
+//    from  files(sourceSets.main.output.classesDir)
+    from  configurations.runtime.asFileTree.files.collect { zipTree(it) }
+    manifest {
+        attributes  'Main-Class': 'com.sunriseframework.nds.NdsStart'
+    }
+}
+
+
+artifacts { archives ndsServiceApiJar,ndsServiceJar}
+
+jar {
+    version "${appVersion}"
+    baseName "${ndsServiceAppName}"
+    include '**'
+    exclude 'applicationContext.xml'
+    manifest {
+        attributes 'packageName': "${ndsServiceAppName}", 'Built-By': builtBy,'Built-date': new Date().format('yyyy-MM-dd HH:mm:ss'),'Manifest-Version':version
+    }
+
+
+}
+
+publishing {
+    publications {
+        ndsService(MavenPublication) {
+            groupId group
+            artifactId "${ndsServiceAppName}"
+            version "${appVersion}"
+            artifact  ndsServiceJar
+        }
+        ndsServiceApi(MavenPublication) {
+            groupId group
+            artifactId "${ndsServiceApiAppName}"
+            version "${appVersion}"
+            artifact  ndsServiceApiJar
+        }
+
+    }
+}
